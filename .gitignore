@@ -1,0 +1,8 @@
+#Vscode configs
+.vscode
+
+#Python cached files
+__pycache__
+
+#Test files
+test
