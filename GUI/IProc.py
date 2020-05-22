@@ -11,7 +11,9 @@ class IProc:
         self.update_flag = False
         self.subeditor = None
         self.image= None #Image.new("RGB", size)
-        self.update_flag = False
+        self.filetypes = [("All Files",".jpg"), ("All Files",".png"), ("All Files",".mp4"),
+                          ("Image File",".jpg"), ("Image File",".png"),
+                          ("Video File", ".mp4")]
         ########################################################################################################################
         #This block of code is for image display
         self.display_frame = tk.Frame(root, width=self.size[0], height=self.size[1])
@@ -25,7 +27,7 @@ class IProc:
         self.Editor_frame = tk.Frame(root)
         self.Editor_frame.grid(row=1, column=0)
 
-        self.Open_but = tk.Button(self.Editor_frame, text="Open", command=self.get_pic)
+        self.Open_but = tk.Button(self.Editor_frame, text="Open", command=self.get_file)
         self.Open_but.grid(row=5, column=1)
 
 
@@ -80,15 +82,24 @@ class IProc:
                 #print()
                 pass
 
-    def get_pic(self):
+    def get_file(self):
         self.canvas.delete("all")
         try:
-            path=filedialog.askopenfilename(filetypes=[("Image File",'.jpg'), ("Image File",'.png')])
+            path=filedialog.askopenfilename(filetypes=self.filetypes)
+
+            if path.endswith(".mp4"):
+                print("This is a video")
+                
             self.image = Image.open(path)
+
+            ##########################################################################################################
+            #This will resize image to fit the screen
             if self.image.width > self.size[0]:
                 self.image = self.image.resize((self.size[0], int(self.image.height*self.size[0]/self.image.width)))
             if self.image.height > self.size[1]:
-                self.image = self.image.resize((int(self.image.width*self.size[1]/self.image.height), self.size[1]))    
+                self.image = self.image.resize((int(self.image.width*self.size[1]/self.image.height), self.size[1]))   
+            ##########################################################################################################
+
             self.update_flag = True
         except Exception as exception:
             print("Couldn't load a file")
