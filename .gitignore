@@ -2,7 +2,7 @@
 .vscode
 
 #Python cached files
-__pycache__
+**/__pycache__
 
 #Test files
 test*
