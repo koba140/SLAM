@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
 import GUI.Filter as Filter
+import cv2 as cv
 class IProc:
 
     def __init__(self, root):
@@ -50,13 +51,13 @@ class IProc:
     def update(self):
         ########################################################################################################################
         #This block of code updates the display
-        if self.update_flag and self.image:
+        if self.update_flag and not self.image is None:
             #where to put image
             x,y= self.size[0]/2, self.size[1]/2
 
             if self.filter.get() == "No filter":
                 self.apply()
-                self.canvas.img = ImageTk.PhotoImage(image=self.image)
+                self.canvas.img = ImageTk.PhotoImage(image=Filter.convert_PIL(self.image))
                 self.canvas.create_image((x,y), image=self.canvas.img)
                 
                 self.update_flag = False
@@ -66,7 +67,7 @@ class IProc:
                     self.apply()
                     self.subeditor = BrightnessEditor(self.Editor_frame, self)
                 
-                self.canvas.img = ImageTk.PhotoImage(image=Filter.brightness_filter(self.image, self.subeditor.threshold.get(), self.subeditor.compression.get()))
+                self.canvas.img = ImageTk.PhotoImage(image=Filter.convert_PIL(Filter.brightness_filter(self.image, self.subeditor.threshold.get(), self.subeditor.compression.get())))
                 self.canvas.create_image((x,y), image=self.canvas.img)
                 
             
@@ -75,7 +76,7 @@ class IProc:
                     self.apply()
                     self.subeditor = EdgesEditor(self.Editor_frame, self)
 
-                self.canvas.img = ImageTk.PhotoImage(image=Filter.edges_filter(self.image, self.subeditor.threshold1.get(), self.subeditor.threshold2.get(), 1))
+                self.canvas.img = ImageTk.PhotoImage(image=Filter.convert_PIL(Filter.edges_filter(self.image, self.subeditor.threshold1.get(), self.subeditor.threshold2.get(), 1)))
                 self.canvas.create_image((x,y), image=self.canvas.img)
                 
             else:
@@ -89,16 +90,18 @@ class IProc:
 
             if path.endswith(".mp4"):
                 print("This is a video")
-                
-            self.image = Image.open(path)
+            elif path.endswith(".jpg") or path.endswith(".png"):    
+                self.image = cv.imread(path)
+                ##########################################################################################################
+                #This will resize image to fit the screen
+                #self.image.shape[1] - WIDTH
+                #self.image.shape[0] - HEIGHT
 
-            ##########################################################################################################
-            #This will resize image to fit the screen
-            if self.image.width > self.size[0]:
-                self.image = self.image.resize((self.size[0], int(self.image.height*self.size[0]/self.image.width)))
-            if self.image.height > self.size[1]:
-                self.image = self.image.resize((int(self.image.width*self.size[1]/self.image.height), self.size[1]))   
-            ##########################################################################################################
+                if self.image.shape[1] > self.size[0]:
+                    self.image = cv.resize(self.image, (self.size[0], self.image.shape[0]*self.size[0]//self.image.shape[1])) #((self.size[0], int(self.image.height*self.size[0]/self.image.width)))
+                if self.image.shape[0] > self.size[1]:
+                    self.image =cv.resize(self.image, (self.image.shape[1]*self.size[1]//self.image.shape[0], self.size[1]))  #self.image.resize((int(self.image.width*self.size[1]/self.image.height), self.size[1]))   
+                ##########################################################################################################
 
             self.update_flag = True
         except Exception as exception:
@@ -108,12 +111,10 @@ class IProc:
     def apply(self):
         if self.subeditor:
             self.subeditor.Frame.destroy()
-        if self.image:
-            self.canvas.delete("all")
-            self.update_flag = True
+
+        self.canvas.delete("all")
+        self.update_flag = True
         
-        else:
-            print("No image to apply filter!")
             
 
     def start_updating_display(self, filler = None):
