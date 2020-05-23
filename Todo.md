@@ -1,1 +1,1 @@
-#Fix bug when switching editors
+# Fix bug when switching editors

@@ -16,7 +16,7 @@ class IProc:
         self.video_flag = False
         self.subeditor = None
         self.image = None #Image.new("RGB", size)
-        self.video = None
+        self.videoplayer = None
         self.filetypes = [("All Files",".jpg"), ("All Files",".png"), ("All Files",".mp4"),
                           ("Image File",".jpg"), ("Image File",".png"),
                           ("Video File", ".mp4")]
@@ -34,7 +34,8 @@ class IProc:
         self.Editor_frame.grid(row=1, column=0)
 
 
-        self.fps_trackbar = tk.Scale(self.Editor_frame, from_=1, to=1555, orient="horizontal", label="FPS", length=200)
+        self.fps_trackbar = tk.Scale(self.Editor_frame, from_=1, to=120, orient="horizontal", label="FPS", length=200)
+        self.fps_trackbar.set(50)
         self.fps_trackbar.grid(row=5, column=0)
 
         self.Open_but = tk.Button(self.Editor_frame, text="Open", command=self.get_file)
@@ -61,46 +62,49 @@ class IProc:
     #This block of code updates the display
     def update(self):
         if time.time()-self.frame_timer >= 1/self.max_fps:
-            if self.video_flag and not self.video is None:
-                isFrame, self.image = self.video.read()
+
+            if self.video_flag and not self.videoplayer is None:
+                isFrame, self.image = self.videoplayer.next_frame()
                 self.image = self.fit_screen(self.image)
 
                 if not isFrame:
                     self.video_flag = False
+                    return 
 
 
             if (self.update_flag or self.video_flag) and not self.image is None:
                 #where to put image
                 x,y= self.size[0]/2, self.size[1]/2
 
-                if self.filter.get() == "No filter":
-                    self.apply()
-                    self.canvas.img = ImageTk.PhotoImage(image=Filter.convert_PIL(self.image))
-                    self.canvas.create_image((x,y), image=self.canvas.img)
-                    
-                    self.update_flag = False
-
-                elif self.filter.get() == "Brightness filter":
-                    if not type(self.subeditor) == BrightnessEditor:
-                        self.apply()
-                        self.subeditor = BrightnessEditor(self.Editor_frame, self)
-                    
-                    self.canvas.img = ImageTk.PhotoImage(image=Filter.convert_PIL(Filter.brightness_filter(self.image, self.subeditor.threshold.get(), self.subeditor.compression.get())))
-                    self.canvas.create_image((x,y), image=self.canvas.img)
-                    
-                
-                elif self.filter.get() == "Edges filter":
-                    if not type(self.subeditor) == EdgesEditor:
-                        self.apply()
-                        self.subeditor = EdgesEditor(self.Editor_frame, self)
-
-                    self.canvas.img = ImageTk.PhotoImage(image=Filter.convert_PIL(Filter.edges_filter(self.image, self.subeditor.threshold1.get(), self.subeditor.threshold2.get(), 1)))
-                    self.canvas.create_image((x,y), image=self.canvas.img)
+                self.canvas.img = self.process_image(self.image, self.filter.get())
+                self.canvas.create_image((x,y), image=self.canvas.img)
                 
             self.max_fps = self.fps_trackbar.get()
             self.frame_timer = time.time()
 
     ########################################################################################################################
+    def process_image(self, image, _filter):
+        if _filter == "No filter":
+            self.apply()
+            processed_image = ImageTk.PhotoImage(image=Filter.convert_PIL(image))
+            self.update_flag = False
+
+        elif _filter == "Brightness filter":
+            if not type(self.subeditor) == BrightnessEditor:
+                self.apply()
+                self.subeditor = BrightnessEditor(self.Editor_frame, self)
+            
+            processed_image = ImageTk.PhotoImage(image=Filter.convert_PIL(Filter.brightness_filter(image, self.subeditor.threshold.get(), self.subeditor.compression.get())))
+            
+        elif _filter == "Edges filter":
+            if not type(self.subeditor) == EdgesEditor:
+                self.apply()
+                self.subeditor = EdgesEditor(self.Editor_frame, self)
+
+            processed_image = ImageTk.PhotoImage(image=Filter.convert_PIL(Filter.edges_filter(image, self.subeditor.threshold1.get(), self.subeditor.threshold2.get(), 1)))
+        
+        print(_filter)
+        return processed_image
     ########################################################################################################################
 
     def get_file(self):
@@ -109,12 +113,11 @@ class IProc:
             path = filedialog.askopenfilename(filetypes=self.filetypes)
 
             if path.endswith(".mp4"):
-                self.video = cv.VideoCapture(path)
-                print(self.video.get(cv.CAP_PROP_FPS))
+                self.videoplayer = VideoPlayer(cv.VideoCapture(path))
                 self.video_flag = True
             elif path.endswith(".jpg") or path.endswith(".png"):    
                 self.image = cv.imread(path)
-                self.image = fit_screen(self.image)
+                self.image = self.fit_screen(self.image)
 
             self.update_flag = True
         except Exception as exception:
@@ -167,6 +170,33 @@ class IProc:
 
 
 
+class VideoPlayer:
+    """
+    This class can be used to play video files
+    """
+
+    def __init__(self, video, screen):
+        self.video = video
+        self.isFrame = False
+        self.current_frame = 0
+        self.framerate = video.get(cv.CAP_PROP_FPS)
+
+        
+
+
+    def next_frame(self, reverse=False):
+        """
+        This method returns a boolean that indicates whether or not a frame exists an the following frame in a video
+        """
+
+        #This sets previous frame as a current frame to play the video in reverse
+        if reverse:
+            self.current_frame = self.current_frame - 1
+            self.video.set(cv.CAP_PROP_POS_FRAMES, self.current_frame)
+
+        #This keeps track of current frame 
+        return self.video.read() 
+        self.current_frame = self.current_frame + 1
 
 
 class BrightnessEditor:

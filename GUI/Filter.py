@@ -15,7 +15,7 @@ def brightness_filter(image, threshold, compression):
 
     img = cv.resize(image, (int(image.shape[1]//compression), int(image.shape[0]//compression)))
 
-    img = cv.cvtColor(img, cv.COLOR_BGR2GRAY, img)
+    img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     cv.threshold(img, threshold, 255, cv.THRESH_BINARY, img)
 
     img = cv.resize(img, (image.shape[1], image.shape[0]))
@@ -32,7 +32,10 @@ def edges_filter(image, threshold1, threshold2, compression = 1):
     return img
 
 def convert_PIL(image):
-    return Image.fromarray(image)
+    img = None
+    img = cv.cvtColor(image, cv.COLOR_BGR2RGB)
+
+    return Image.fromarray(img)
 
 def nothing(x):
     pass
