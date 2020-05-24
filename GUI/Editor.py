@@ -44,7 +44,7 @@ class Editor:
         self.filter = tk.StringVar(self.display_frame)
         self.Filters = tk.OptionMenu(self.Editor_frame, self.filter, *options)
         self.filter.set("No filter")
-        self.Filters.grid(row=5, column=2)
+        self.Filters.grid(row=5, column=5)
     ########################################################################################################################
     def update(self, image):
         #where to put image
@@ -118,8 +118,7 @@ class Editor:
             del self.editor
 
         self.canvas.delete("all")
-        self.update_flag = True
-    
+        self.update_flag = True 
 ############################################################################################################################
 class VideoPlayer(Editor):
     """
@@ -132,32 +131,49 @@ class VideoPlayer(Editor):
         #Settings
         self.framerate = video.get(cv.CAP_PROP_FPS)
         self.filetypes = [("Video File", ".mp4")]
+        self.playback_speed = self.framerate
 
         #Working variables
         self.current_frame = 0
-        self.reverse = False
+        self.rewind = False
 
+        #Other objects
         self.video = video
+
+        self.rewind_switch = tk.Button(self.Editor_frame, text="Rewind", command=self.rewind_vid)
+        self.rewind_switch.grid(row=0, column=0)
+
+        self.playback_speed_bar = tk.Scale(self.Editor_frame, from_=1, to=10, orient="horizontal", label="Playback Speed", length=300)
+        self.playback_speed_bar.grid(row=0, column=1)
+
     ############################################################################################################################
-    def next_frame(self, reverse=False):
+    def next_frame(self):
         """
         This method returns a boolean that indicates whether or not a frame exists an the following frame in a video
         """
-
         #This sets previous frame as a current frame to play the video in reverse
-        if reverse:
-            self.current_frame = self.current_frame - 1
+        if self.rewind:
+            self.current_frame = self.current_frame - self.playback_speed
             self.video.set(cv.CAP_PROP_POS_FRAMES, self.current_frame)
+        else:
+            self.current_frame = self.current_frame + self.playback_speed
+            self.video.set(cv.CAP_PROP_POS_FRAMES, self.current_frame - 1)
 
-        #This keeps track of current frame 
         return self.video.read() 
-        self.current_frame = self.current_frame + 1
     ############################################################################################################################
     def update(self):
         isFrame, frame = self.next_frame()
         if isFrame:
             super().update(frame)
-############################################################################################################################
+        
+        self.playback_speed = self.playback_speed_bar.get()
+
+    ############################################################################################################################
+    def rewind_vid(self):
+        if self.rewind:
+            self.rewind = False
+        else:
+            self.rewind = True
 class ImageEditor(Editor):
     def __init__(self, root, size, image):
         self.image = image
@@ -165,20 +181,3 @@ class ImageEditor(Editor):
     
     def update(self):
         super().update(self.image)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
