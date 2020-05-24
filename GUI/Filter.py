@@ -31,11 +31,28 @@ def edges_filter(image, threshold1, threshold2, compression = 1):
     img = cv.resize(img, (image.shape[1], image.shape[0]))
     return img
 
+def corner_detector(image, blocksize, ksize, k, borderType=cv.BORDER_CONSTANT):
+    img = image
+    img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    img = np.float32(img)
+
+    corners = cv.cornerHarris(img, blocksize, ksize, k, borderType=borderType)
+    #corners = cv.dilate(corners, None)
+
+    image[corners>0.005*corners.max()]=[0,0,255]
+    image[corners<0]=[0,255,0]
+
+   
+
+
+    return image
+
 def convert_PIL(image):
     img = None
     img = cv.cvtColor(image, cv.COLOR_BGR2RGB)
 
     return Image.fromarray(img)
+
 
 def nothing(x):
     pass

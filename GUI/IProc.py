@@ -53,8 +53,12 @@ class IProc:
             path = filedialog.askopenfilename(filetypes=self.filetypes)
 
             if path.endswith(".mp4"):
+                if not self.editor is None:
+                    self.editor.destroy()
                 self.editor = Editor.VideoPlayer(self.editor_frame, self.size, cv.VideoCapture(path))
-            elif path.endswith(".jpg") or path.endswith(".png"):    
+            elif path.endswith(".jpg") or path.endswith(".png"):   
+                if not self.editor is None:
+                    self.editor.destroy() 
                 self.editor = Editor.ImageEditor(self.editor_frame, self.size, cv.imread(path))
 
         except Exception as exception:

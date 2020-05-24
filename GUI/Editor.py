@@ -39,7 +39,8 @@ class Editor:
         options = [
             "No filter",
             "Brightness filter",
-            "Edges filter"
+            "Edges filter",
+            "Corner detector"
         ]
         self.filter = tk.StringVar(self.display_frame)
         self.Filters = tk.OptionMenu(self.Editor_frame, self.filter, *options)
@@ -75,7 +76,13 @@ class Editor:
                 self.editor = EdgesController(self.Editor_frame)
 
             processed_image = ImageTk.PhotoImage(image=Filter.convert_PIL(Filter.edges_filter(image, self.editor.threshold1.get(), self.editor.threshold2.get(), 1)))
-        
+        elif _filter == "Corner detector":
+            if not type(self.editor) == CornerController:
+                self.clear()
+                self.editor = CornerController(self.Editor_frame)
+
+            processed_image = ImageTk.PhotoImage(image=Filter.convert_PIL(Filter.corner_detector(image, self.editor.blocksize.get(), self.editor.ksize.get()+1, self.editor.k.get())))
+         
         return processed_image
     ########################################################################################################################
     def fit_screen(self, image):
@@ -119,6 +126,10 @@ class Editor:
 
         self.canvas.delete("all")
         self.update_flag = True 
+    ########################################################################################################################
+    def destroy(self):
+        self.main_frame.destroy()
+
 ############################################################################################################################
 class VideoPlayer(Editor):
     """
