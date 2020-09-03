@@ -1,3 +1,9 @@
+#################################################################################
+#This block allows to run main.py by running this file
+import sys 
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+#################################################################################
 import cv2 as cv
 import time
 import tkinter as tk
@@ -8,7 +14,7 @@ class IProc:
 
     def __init__(self, root):
         
-        self.size = (700, 700) #(Width, Height)
+        self.size = (600, 600) #(Width, Height)
         self.max_fps = 40
 
         #Supported filetypes

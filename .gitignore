@@ -6,3 +6,7 @@
 
 #Test files
 test*
+
+#Image Datasets
+image_datasets*
+.DS_Store

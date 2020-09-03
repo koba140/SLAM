@@ -1,9 +1,18 @@
+#################################################################################
+#This block allows to run main.py by running this file
+import sys 
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+#################################################################################
 import cv2 as cv
 import tkinter as tk
 from PIL import Image, ImageTk
 from GUI.Controller import *
 import GUI.Filter as Filter
 
+
+if __name__ == "__main__":
+    import main
 class Editor:
     """
     This is a basic template for editor.
@@ -13,6 +22,8 @@ class Editor:
         #Settings
         self.size = size #(WIDTH, HEIGHT)
         
+        self.buffer = None
+        self.done=0
         #Working variables
         self.file = None
         self.update_flag = True
@@ -40,7 +51,8 @@ class Editor:
             "No filter",
             "Brightness filter",
             "Edges filter",
-            "Corner detector"
+            "Corner detector",
+            "Build with Images",
         ]
         self.filter = tk.StringVar(self.display_frame)
         self.Filters = tk.OptionMenu(self.Editor_frame, self.filter, *options)
@@ -82,7 +94,15 @@ class Editor:
                 self.editor = CornerController(self.Editor_frame)
 
             processed_image = ImageTk.PhotoImage(image=Filter.convert_PIL(Filter.corner_detector(image, self.editor.blocksize.get(), self.editor.ksize.get()+1, self.editor.k.get())))
-         
+        elif _filter == "Build with Images":
+            self.clear()
+
+            if self.done == 0:
+                processed_image = ImageTk.PhotoImage(image=Filter.convert_PIL(Filter.Build_from_images(image, 4, "BWI/image_datasets/flower_images/")))
+                self.buffer = processed_image
+            else:
+                processed_image = self.buffer
+            self.done = 1
         return processed_image
     ########################################################################################################################
     def fit_screen(self, image):
@@ -123,6 +143,7 @@ class Editor:
     def clear(self):
         if self.editor:
             del self.editor
+            self.editor = 0 
 
         self.canvas.delete("all")
         self.update_flag = True 
@@ -154,7 +175,7 @@ class VideoPlayer(Editor):
         self.rewind_switch = tk.Button(self.Editor_frame, text="Rewind", command=self.rewind_vid)
         self.rewind_switch.grid(row=0, column=0)
 
-        self.playback_speed_bar = tk.Scale(self.Editor_frame, from_=1, to=10, orient="horizontal", label="Playback Speed", length=300)
+        self.playback_speed_bar = tk.Scale(self.Editor_frame, from_=1, to=100, orient="horizontal", label="Playback Speed", length=300)
         self.playback_speed_bar.grid(row=0, column=1)
 
     ############################################################################################################################

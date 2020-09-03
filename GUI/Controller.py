@@ -47,3 +47,5 @@ class CornerController(Controller):
 
         self.k = tk.Scale(self.Frame, from_=0.00001, to=0.5, orient="horizontal", label="k", length=200, resolution=0.00001)
         self.k.grid(row=0, column=2)
+
+        
